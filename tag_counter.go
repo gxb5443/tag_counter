@@ -12,7 +12,6 @@ import (
 )
 
 type Tag struct {
-	Id    int64
 	Tag   string
 	Count int64
 }
@@ -55,7 +54,7 @@ func initDb(config string) *gorp.DbMap {
 	checkErr(err, "postgres.Open failed")
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
-	table := dbmap.AddTableWithName(Tag{}, "tags").SetKeys(true, "Id")
+	table := dbmap.AddTableWithName(Tag{}, "tags").SetKeys(false, "Tag")
 	table.ColMap("Tag").SetNotNull(true)
 	table.ColMap("Count").SetNotNull(true)
 
