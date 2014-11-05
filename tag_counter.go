@@ -1,11 +1,19 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/coopernurse/gorp"
+	_ "github.com/lib/pq"
 )
 
 type Tag struct {
+	Id    int64
+	Tag   string
+	Count int64
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +37,35 @@ func tag2handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func checkErr(err error, msg string) {
+	if err != nil {
+		log.Fatalln(msg, err)
+	}
+}
+func PanicIf(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initDb() *gorp.DbMap {
+	db, err := sql.Open("postgres", "user=admin dbname=tag_counting sslmode=disable")
+	checkErr(err, "postgres.Open failed")
+
+	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
+	table := dbmap.AddTableWithName(Tag{}, "tags").SetKeys(true, "Id")
+	table.ColMap("Tag").SetNotNull(true)
+	table.ColMap("Count").SetNotNull(true)
+
+	err = dbmap.CreateTablesIfNotExists()
+	checkErr(err, "Could not create tables")
+
+	return dbmap
+}
+
 func main() {
+	dbmap := initDb()
+	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
 	http.HandleFunc("/tag/", tag2handler)
 	http.HandleFunc("/tag", taghandler)
