@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -48,8 +49,9 @@ func PanicIf(err error) {
 	}
 }
 
-func initDb() *gorp.DbMap {
-	db, err := sql.Open("postgres", "user=admin dbname=tag_counting sslmode=disable")
+func initDb(config string) *gorp.DbMap {
+	//db, err := sql.Open("postgres", "user=admin password=admin dbname=tag_counting sslmode=disable")
+	db, err := sql.Open("postgres", config)
 	checkErr(err, "postgres.Open failed")
 
 	dbmap := &gorp.DbMap{Db: db, Dialect: gorp.PostgresDialect{}}
@@ -64,13 +66,15 @@ func initDb() *gorp.DbMap {
 }
 
 func main() {
-	dbmap := initDb()
+	config, err := ioutil.ReadFile("db.conf")
+	PanicIf(err)
+	dbmap := initDb(string(config))
 	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
 	http.HandleFunc("/tag/", tag2handler)
 	http.HandleFunc("/tag", taghandler)
 	http.HandleFunc("/", handler)
-	err := http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		fmt.Printf("Could not start server: %s", err)
 	}
