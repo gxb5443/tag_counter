@@ -12,8 +12,8 @@ import (
 )
 
 type Tag struct {
-	Tag   string
-	Count int64
+	Tag   string `json:"tag"`
+	Count int64  `json:"count"`
 }
 
 func checkErr(err error, msg string) {
@@ -49,19 +49,30 @@ func main() {
 	dbmap := initDb(string(config))
 	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
+	r.GET("/tag/:tag", func(c *gin.Context) {
+		query_tag := c.Params.ByName("tag")
+		obj, err := dbmap.Get(Tag{}, query_tag)
+		checkErr(err, "Couldn't get object from db")
+		if obj != nil {
+			c.JSON(200, obj.(*Tag))
+		} else {
+			t := Tag{Tag: query_tag}
+			c.JSON(200, t)
+		}
+	})
 	r.POST("/tag", func(c *gin.Context) {
 		var t Tag
 		c.Bind(&t)
 		obj, err := dbmap.Get(Tag{}, t.Tag)
 		checkErr(err, "Couldn't get object")
 		if obj != nil {
-			//Tag exists so update
 			existing_tag, _ := obj.(*Tag)
 			existing_tag.Count++
 			_, uerr := dbmap.Update(existing_tag)
 			checkErr(uerr, "Couldn't update object")
 			c.JSON(200, existing_tag)
 		} else {
+			t.Count = 1
 			dbmap.Insert(&t)
 			c.JSON(200, t)
 		}
