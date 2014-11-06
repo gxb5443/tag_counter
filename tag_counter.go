@@ -5,36 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 
 	"github.com/coopernurse/gorp"
+	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 type Tag struct {
 	Tag   string
 	Count int64
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Web Server Online! Param is %s!", r.URL.Path[1:])
-}
-
-func taghandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		fmt.Fprintf(w, "You got it alright!")
-	} else {
-		fmt.Fprintf(w, "Sorry, %s functionality not yet supported", r.Method)
-	}
-}
-
-func tag2handler(w http.ResponseWriter, r *http.Request) {
-	req_tag := r.URL.Path[len("/tag/"):]
-	if r.Method == "GET" {
-		fmt.Fprintf(w, "Looking for tag: \"%s\"", req_tag)
-	} else {
-		fmt.Fprintf(w, "Sorry, %s functionality not yet supported", r.Method)
-	}
 }
 
 func checkErr(err error, msg string) {
@@ -49,7 +28,6 @@ func PanicIf(err error) {
 }
 
 func initDb(config string) *gorp.DbMap {
-	//db, err := sql.Open("postgres", "user=admin password=admin dbname=tag_counting sslmode=disable")
 	db, err := sql.Open("postgres", config)
 	checkErr(err, "postgres.Open failed")
 
@@ -65,16 +43,28 @@ func initDb(config string) *gorp.DbMap {
 }
 
 func main() {
+	r := gin.Default()
 	config, err := ioutil.ReadFile("db.conf")
 	PanicIf(err)
 	dbmap := initDb(string(config))
 	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
-	http.HandleFunc("/tag/", tag2handler)
-	http.HandleFunc("/tag", taghandler)
-	http.HandleFunc("/", handler)
-	err = http.ListenAndServe(":8080", nil)
-	if err != nil {
-		fmt.Printf("Could not start server: %s", err)
-	}
+	r.POST("/tag", func(c *gin.Context) {
+		var t Tag
+		c.Bind(&t)
+		obj, err := dbmap.Get(Tag{}, t.Tag)
+		checkErr(err, "Couldn't get object")
+		if obj != nil {
+			//Tag exists so update
+			existing_tag, _ := obj.(*Tag)
+			existing_tag.Count++
+			_, uerr := dbmap.Update(existing_tag)
+			checkErr(uerr, "Couldn't update object")
+			c.JSON(200, existing_tag)
+		} else {
+			dbmap.Insert(&t)
+			c.JSON(200, t)
+		}
+	})
+	r.Run(":8080")
 }
