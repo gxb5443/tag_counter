@@ -10,7 +10,7 @@ HTTP Microservice to accept POST requests with a tag string and counts the numbe
 
 ##Usage
 ###Configuration
-The tag counter comes with a configuration file.  This must be configured before the server is run.  The configuration file is in the project root directory.  It's called the 'app.config' file.  It contains the configuration information for connecting to Postgres.
+The tag counter comes with a configuration file.  This must be configured before the server is run.  The configuration file is in the project root directory  in the 'db.config' file.  It contains the configuration information for connecting to Postgres.
 ```
 user=admin
 password=admin
