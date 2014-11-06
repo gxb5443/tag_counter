@@ -20,9 +20,9 @@ sslmode=disable
 
 ###Dependencies
 The system requires some external libraries to make things easier and cleaner.  The libraries include:
-1. [Gin-Gonic](http://gin-gonic.github.io/gin/) - This handles all the http requests and routing
-2. [PQ]("https://github.com/lib/pq") - Golang Postgres driver
-3. [Gorp](https://github.com/coopernurse/gorp) - ORM wrapper library for easier DB access
+* [Gin-Gonic](http://gin-gonic.github.io/gin/) - This handles all the http requests and routing
+* [PQ]("https://github.com/lib/pq") - Golang Postgres driver
+* [Gorp](https://github.com/coopernurse/gorp) - ORM wrapper library for easier DB access
 
 If needed, use go get:
 ```
