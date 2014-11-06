@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/coopernurse/gorp"
 	"github.com/gin-gonic/gin"
@@ -50,7 +51,7 @@ func main() {
 	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
 	r.GET("/tag/:tag", func(c *gin.Context) {
-		query_tag := c.Params.ByName("tag")
+		query_tag := strings.ToLower(c.Params.ByName("tag"))
 		obj, err := dbmap.Get(Tag{}, query_tag)
 		checkErr(err, "Couldn't get object from db")
 		if obj != nil {
@@ -63,6 +64,7 @@ func main() {
 	r.POST("/tag", func(c *gin.Context) {
 		var t Tag
 		c.Bind(&t)
+		t.Tag = strings.ToLower(t.Tag)
 		obj, err := dbmap.Get(Tag{}, t.Tag)
 		checkErr(err, "Couldn't get object")
 		if obj != nil {
