@@ -17,6 +17,7 @@ password=admin
 dbname=tag_counting
 sslmode=disable
 ```
+The tag counter creates a new table 'tags' in the specified Postgres database (if it doesn't already exist).
 
 ###Dependencies
 The system requires some external libraries to make things easier and cleaner.  The libraries include:
