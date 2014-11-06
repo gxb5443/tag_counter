@@ -50,7 +50,7 @@ func main() {
 	dbmap := initDb(string(config))
 	defer dbmap.Db.Close()
 	fmt.Printf("Starting Web Server...")
-	r.GET("/tag/:tag", func(c *gin.Context) {
+	r.GET("/tags/:tag", func(c *gin.Context) {
 		query_tag := strings.ToLower(c.Params.ByName("tag"))
 		obj, err := dbmap.Get(Tag{}, query_tag)
 		checkErr(err, "Couldn't get object from db")
@@ -61,7 +61,7 @@ func main() {
 			c.JSON(200, t)
 		}
 	})
-	r.POST("/tag", func(c *gin.Context) {
+	r.POST("/tags", func(c *gin.Context) {
 		var t Tag
 		c.Bind(&t)
 		t.Tag = strings.ToLower(t.Tag)
